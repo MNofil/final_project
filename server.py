@@ -1,33 +1,34 @@
-from flask import Flask, request, render_template
-from EmotionDetection import emotion_detector
+"""
+    SERVER.PY
+"""
+from flask import Flask, render_template, request
+from EmotionDetection.emotion_detection import emotion_detector
 
-app = Flask(__name__)
+app = Flask("Emotion Detector")
 
-@app.route("/")
-def home():
-    return render_template("index.html")
+@app.route("/emotionDetector")
+def emotion_detector_function():
+    ''' This function calls the application
+    '''
+    text_to_analyze = request.args.get('textToAnalyze')
+    response = emotion_detector(text_to_analyze)
 
-@app.route("/emotionDetector", methods=["POST"])
-def emotion_detect():
-    text_to_analyze = request.form["text"]
-    result = emotion_detector(text_to_analyze)
+    if response['dominant_emotion'] is None:
+        response_text = "Invalid Input! Please try again."
+    else:
+        response_text = f"For the given statement, the system response is 'anger': \
+                    {response['anger']}, 'disgust': {response['disgust']}, \
+                    'fear': {response['fear']}, 'joy': {response['joy']}, \
+                    'sadness': {response['sadness']}. The dominant emotion is \
+                    {response['dominant_emotion']}."
 
-    # If invalid text (blank or API error → dominant_emotion = None)
-    if result["dominant_emotion"] is None:
-        return "Invalid text! Please try again!"
-
-    # Otherwise, prepare the output string
-    response_text = (
-        f"For the given statement, the system response is "
-        f"'anger': {result['anger']}, "
-        f"'disgust': {result['disgust']}, "
-        f"'fear': {result['fear']}, "
-        f"'joy': {result['joy']}, "
-        f"'sadness': {result['sadness']}. "
-        f"The dominant emotion is {result['dominant_emotion']}."
-    )
-    
     return response_text
 
+@app.route("/")
+def render_index_page():
+    ''' This is the function to render the html interface
+    '''
+    return render_template('index.html')
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host = "0.0.0.0", port = 5000)
